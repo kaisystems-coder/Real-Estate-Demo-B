@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# Internal sales material - not for the public repo
+PITCH-WALKTHROUGH.md

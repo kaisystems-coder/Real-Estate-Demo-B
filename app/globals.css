@@ -1,0 +1,246 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.34'/%3E%3C/svg%3E");
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* clip, not hidden: `hidden` on the root makes html a scroll container
+       and breaks position:sticky for the filter bar. clip contains the
+       featured rail's width without that side effect. */
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: #faf8f4;
+    color: #12130f;
+    font-feature-settings: 'kern' 1;
+    /* The featured rail scrolls horizontally inside its own container.
+       Without this, its scroll width becomes the document's width and every
+       `fixed inset-x-0` element (the header) stretches to match it. */
+    overflow-x: clip;
+    /* Layered radial washes, not a flat fill. Sage and gold at very low alpha
+       so the ground reads as warm paper rather than as a gradient. */
+    background-image:
+      radial-gradient(68rem 42rem at 12% -8%, rgba(184, 147, 77, 0.07), transparent 62%),
+      radial-gradient(54rem 38rem at 96% 4%, rgba(140, 146, 132, 0.09), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  /* Digits line up in the spec ledger, price columns and the admin table. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: rgba(184, 147, 77, 0.26);
+  }
+
+  /* The calculator tab panels toggle with the `hidden` attribute so neither
+     unmounts. Elements carrying display utilities would otherwise outrank the
+     attribute and render both panels at once. */
+  [hidden] {
+    display: none !important;
+  }
+
+  /* One focus treatment for the whole app. Gold ring on an ink offset reads
+     clearly on both the bone ground and the charcoal hero. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #b8934d;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Fine grain over dark photography. Fixed and non-interactive so it never
+     repaints during scroll. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain);
+    opacity: 0.28;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  /* The signature: a hairline ledger of property specs, set like the stat row
+     on a printed agency sheet. Repeated on card, detail and admin. */
+  .ledger {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid #e7e2d8;
+  }
+
+  .ledger > * + * {
+    border-left: 1px solid #e7e2d8;
+  }
+
+  .on-ink .ledger,
+  .on-ink .ledger > * + * {
+    border-color: rgba(250, 248, 244, 0.16);
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * Calculator sliders. A native range input, restyled rather than replaced,
+   * so it keeps arrow-key stepping and screen-reader announcement for free.
+   * The painted portion of the rail is driven by a --fill custom property the
+   * component sets from its own value.
+   */
+  /*
+   * 44px tall on touch so the whole rail is draggable, not just the 3px line —
+   * a thin slider is the hardest control to hit on a phone. The visible track
+   * stays 3px; the extra height is invisible hit area, centred by the track's
+   * own margin. Released to the tighter 24px from `sm` up, where a mouse is
+   * precise and the vertical rhythm of the calculator matters more.
+   */
+  .range-rail {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 2.75rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  /* Tighten only for a fine pointer: a landscape phone is 844px wide and still
+     a touchscreen, so width alone would hand fingers a 24px rail. */
+  @media (min-width: 640px) and (pointer: fine) {
+    .range-rail {
+      height: 1.5rem;
+    }
+  }
+
+  .range-rail::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      #8e6f36 0%,
+      #8e6f36 var(--fill, 0%),
+      #e7e2d8 var(--fill, 0%),
+      #e7e2d8 100%
+    );
+  }
+
+  .range-rail::-moz-range-track {
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      #8e6f36 0%,
+      #8e6f36 var(--fill, 0%),
+      #e7e2d8 var(--fill, 0%),
+      #e7e2d8 100%
+    );
+  }
+
+  .range-rail::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: -0.52rem;
+    border-radius: 999px;
+    background: #faf8f4;
+    border: 1px solid #8e6f36;
+    box-shadow: 0 1px 2px rgba(18, 19, 15, 0.12), 0 4px 10px -4px rgba(18, 19, 15, 0.28);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .range-rail::-moz-range-thumb {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    background: #faf8f4;
+    border: 1px solid #8e6f36;
+    box-shadow: 0 1px 2px rgba(18, 19, 15, 0.12), 0 4px 10px -4px rgba(18, 19, 15, 0.28);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .range-rail:hover::-webkit-slider-thumb,
+  .range-rail:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+
+  .range-rail:hover::-moz-range-thumb,
+  .range-rail:active::-moz-range-thumb {
+    transform: scale(1.12);
+  }
+
+  /* The landing-page teaser puts a slider on the ink ground, where the shared
+     component's ink labels and stone track would both disappear. */
+  .teaser-slider label span:first-child {
+    color: rgba(250, 248, 244, 0.45);
+  }
+
+  .teaser-slider label span:last-child {
+    color: #faf8f4;
+  }
+
+  .teaser-slider .range-rail::-webkit-slider-runnable-track {
+    background: linear-gradient(
+      to right,
+      #b8934d 0%,
+      #b8934d var(--fill, 0%),
+      rgba(250, 248, 244, 0.2) var(--fill, 0%),
+      rgba(250, 248, 244, 0.2) 100%
+    );
+  }
+
+  .teaser-slider .range-rail::-moz-range-track {
+    background: linear-gradient(
+      to right,
+      #b8934d 0%,
+      #b8934d var(--fill, 0%),
+      rgba(250, 248, 244, 0.2) var(--fill, 0%),
+      rgba(250, 248, 244, 0.2) 100%
+    );
+  }
+}
+
+/*
+ * Reduced motion: shorten transitions rather than zeroing them globally.
+ * A blanket `transition-duration: 0` reset strands scroll-reveal sections at
+ * opacity 0 when a library drives the reveal, so the components themselves
+ * also check useReducedMotion and render at their resting state.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
